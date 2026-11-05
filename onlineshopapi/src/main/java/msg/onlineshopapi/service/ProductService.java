@@ -6,6 +6,7 @@ import msg.onlineshopapi.exception.ResourceNotFoundException;
 import msg.onlineshopapi.model.Product;
 import msg.onlineshopapi.repository.OrderDetailRepository;
 import msg.onlineshopapi.repository.ProductRepository;
+import msg.onlineshopapi.repository.SupplierRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final OrderDetailRepository orderDetailRepository;
+    private final SupplierRepository supplierRepository;
 
     public List<Product> findAll() {
         return productRepository.findAll();
@@ -28,19 +30,29 @@ public class ProductService {
     }
 
     public Product save(Product product) {
+        validateSupplierExists(product);
         return productRepository.save(product);
     }
 
     public Product update(UUID id, Product product) {
         Product existing = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        validateSupplierExists(product);
         existing.setName(product.getName());
         existing.setDescription(product.getDescription());
         existing.setPrice(product.getPrice());
         existing.setWeight(product.getWeight());
         existing.setCategory(product.getCategory());
+        existing.setSupplier(product.getSupplier());
         existing.setImageUrl(product.getImageUrl());
         return productRepository.save(existing);
+    }
+
+    private void validateSupplierExists(Product product) {
+        UUID supplierId = product.getSupplier().getId();
+        if (!supplierRepository.existsById(supplierId)) {
+            throw new ResourceNotFoundException("Supplier not found with id: " + supplierId);
+        }
     }
 
     public void deleteById(UUID id) {

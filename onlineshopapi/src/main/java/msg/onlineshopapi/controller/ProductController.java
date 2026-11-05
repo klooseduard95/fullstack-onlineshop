@@ -50,6 +50,7 @@ public class ProductController {
     @Operation(summary = "Create a product", description = "Creates a new product. Requires ADMIN role.")
     @ApiResponse(responseCode = "200", description = "Product created successfully")
     @ApiResponse(responseCode = "403", description = "Access denied")
+    @ApiResponse(responseCode = "404", description = "Supplier not found")
     public ProductResponseDto create(@RequestBody ProductRequestDto dto) {
         return productMapper.toDto(productService.save(productMapper.toEntity(dto)));
     }
@@ -59,7 +60,7 @@ public class ProductController {
     @Operation(summary = "Update a product", description = "Updates an existing product. Requires ADMIN role.")
     @ApiResponse(responseCode = "200", description = "Product updated successfully")
     @ApiResponse(responseCode = "403", description = "Access denied")
-    @ApiResponse(responseCode = "404", description = "Product not found")
+    @ApiResponse(responseCode = "404", description = "Product or supplier not found")
     public ProductResponseDto update(@Parameter(description = "Product ID") @PathVariable UUID id, @RequestBody ProductRequestDto dto) {
         return productMapper.toDto(productService.update(id, productMapper.toEntity(dto)));
     }

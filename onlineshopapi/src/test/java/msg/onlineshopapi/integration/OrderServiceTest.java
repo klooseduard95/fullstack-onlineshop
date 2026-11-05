@@ -8,6 +8,7 @@ import msg.onlineshopapi.model.Product;
 import msg.onlineshopapi.model.ProductCategory;
 import msg.onlineshopapi.model.Stock;
 import msg.onlineshopapi.model.StockId;
+import msg.onlineshopapi.model.Supplier;
 import msg.onlineshopapi.model.User;
 import msg.onlineshopapi.model.UserRole;
 import msg.onlineshopapi.repository.LocationRepository;
@@ -16,6 +17,7 @@ import msg.onlineshopapi.repository.OrderRepository;
 import msg.onlineshopapi.repository.ProductCategoryRepository;
 import msg.onlineshopapi.repository.ProductRepository;
 import msg.onlineshopapi.repository.StockRepository;
+import msg.onlineshopapi.repository.SupplierRepository;
 import msg.onlineshopapi.repository.UserRepository;
 import msg.onlineshopapi.service.OrderService;
 import org.junit.jupiter.api.AfterEach;
@@ -78,10 +80,14 @@ class OrderServiceTest {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private SupplierRepository supplierRepository;
+
     private Product laptop;
     private Location location;
     private User user;
     private StockId stockId;
+    private Supplier supplier;
 
     @BeforeEach
     void setUp() {
@@ -89,10 +95,14 @@ class OrderServiceTest {
         category.setName("Electronics");
         category = productCategoryRepository.save(category);
 
+        supplier = Supplier.builder().name("TechSource Distributors").build();
+        supplier = supplierRepository.save(supplier);
+
         laptop = Product.builder()
                 .name("Laptop")
                 .price(BigDecimal.valueOf(999.99))
                 .category(category)
+                .supplier(supplier)
                 .build();
         laptop = productRepository.save(laptop);
 
@@ -181,6 +191,7 @@ class OrderServiceTest {
                 .name("Mouse")
                 .price(BigDecimal.valueOf(29.99))
                 .category(category)
+                .supplier(supplier)
                 .build();
         mouse = productRepository.save(mouse);
 
@@ -232,6 +243,7 @@ class OrderServiceTest {
                 .name("Keyboard")
                 .price(BigDecimal.valueOf(49.99))
                 .category(category)
+                .supplier(supplier)
                 .build();
         keyboard = productRepository.save(keyboard);
 
