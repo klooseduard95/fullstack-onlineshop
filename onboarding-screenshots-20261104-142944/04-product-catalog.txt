@@ -1,0 +1,1 @@
+Product catalog displays items in a grid with image, category badge, name, description, price, weight, and View/Add to Cart buttons. Visible products include Wireless Headphones ($149.99), Smart Watch ($299.99), and Bluetooth Speaker ($79.99).

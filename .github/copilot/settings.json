@@ -1,0 +1,12 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "allowBypass": true,
+    "sandboxMcpServers": true,
+    "sandboxLspServers": true,
+    "authenticateGit": true,
+    "authenticateGh": true
+  },
+  "stayInAutopilot": false,
+  "renderMarkdown": true
+}

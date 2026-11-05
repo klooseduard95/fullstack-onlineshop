@@ -1,0 +1,1 @@
+Clicking "Add to Cart" triggered a confirmation toast: "ADDED TO CART - Wireless Headphones was added to your cart."

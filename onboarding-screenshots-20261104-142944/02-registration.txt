@@ -1,0 +1,1 @@
+Registration form was submitted with onboarduser@example.com / onboarduser, and the app redirected to the Sign In page, indicating the account was created successfully.

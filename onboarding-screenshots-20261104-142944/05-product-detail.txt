@@ -1,0 +1,1 @@
+Product detail page for Wireless Headphones shows category (Electronics), price ($149.99, 0.25g weight), full description, a quantity selector with +/- controls, a live total price, and an Add to Cart button.

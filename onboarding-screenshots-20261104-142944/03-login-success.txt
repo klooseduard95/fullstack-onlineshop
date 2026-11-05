@@ -1,0 +1,1 @@
+Logged in successfully as onboarduser@example.com; the navbar shows the user's email and a Logout button, and the app redirected to the Products catalog page.

@@ -1,0 +1,1 @@
+Application loaded at http://localhost:4200 and redirected unauthenticated users to the Sign In page, showing email/password fields and a "Register" link.

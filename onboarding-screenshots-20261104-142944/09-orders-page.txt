@@ -1,0 +1,1 @@
+Orders page lists all orders for the user, including the newly created order (1eee721c-6974-40cd-a135-7c5b1887c30b) with 1 item and a $149.99 total, alongside previously seeded sample orders.
