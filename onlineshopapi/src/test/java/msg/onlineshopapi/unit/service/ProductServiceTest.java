@@ -40,17 +40,23 @@ class ProductServiceTest {
 
     @Test
     void save_persistsProduct_whenSupplierExists() {
+        Supplier supplier = Supplier.builder()
+                .id(supplierId)
+                .name("TechSource")
+                .contactEmail("sales@techsource.example.com")
+                .build();
         Product product = Product.builder()
                 .name("Laptop")
                 .supplier(Supplier.builder().id(supplierId).build())
                 .build();
 
-        when(supplierRepository.existsById(supplierId)).thenReturn(true);
+        when(supplierRepository.findById(supplierId)).thenReturn(Optional.of(supplier));
         when(productRepository.save(product)).thenReturn(product);
 
         Product result = productService.save(product);
 
         assertThat(result).isEqualTo(product);
+        assertThat(result.getSupplier()).isSameAs(supplier);
     }
 
     @Test
@@ -60,7 +66,7 @@ class ProductServiceTest {
                 .supplier(Supplier.builder().id(supplierId).build())
                 .build();
 
-        when(supplierRepository.existsById(supplierId)).thenReturn(false);
+        when(supplierRepository.findById(supplierId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> productService.save(product))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -77,7 +83,7 @@ class ProductServiceTest {
                 .build();
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(existing));
-        when(supplierRepository.existsById(supplierId)).thenReturn(false);
+        when(supplierRepository.findById(supplierId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> productService.update(productId, update))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -92,14 +98,19 @@ class ProductServiceTest {
                 .name("Updated Laptop")
                 .supplier(Supplier.builder().id(supplierId).build())
                 .build();
+        Supplier supplier = Supplier.builder()
+                .id(supplierId)
+                .name("TechSource")
+                .contactEmail("sales@techsource.example.com")
+                .build();
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(existing));
-        when(supplierRepository.existsById(supplierId)).thenReturn(true);
+        when(supplierRepository.findById(supplierId)).thenReturn(Optional.of(supplier));
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Product result = productService.update(productId, update);
 
         assertThat(result.getName()).isEqualTo("Updated Laptop");
-        assertThat(result.getSupplier().getId()).isEqualTo(supplierId);
+        assertThat(result.getSupplier()).isSameAs(supplier);
     }
 }

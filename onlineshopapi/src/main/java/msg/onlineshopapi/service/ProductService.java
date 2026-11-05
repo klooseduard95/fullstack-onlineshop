@@ -50,9 +50,8 @@ public class ProductService {
 
     private void validateSupplierExists(Product product) {
         UUID supplierId = product.getSupplier().getId();
-        if (!supplierRepository.existsById(supplierId)) {
-            throw new ResourceNotFoundException("Supplier not found with id: " + supplierId);
-        }
+        product.setSupplier(supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + supplierId)));
     }
 
     public void deleteById(UUID id) {
