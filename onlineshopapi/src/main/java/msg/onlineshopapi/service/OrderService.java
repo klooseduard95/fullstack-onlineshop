@@ -2,6 +2,7 @@ package msg.onlineshopapi.service;
 
 import lombok.RequiredArgsConstructor;
 import msg.onlineshopapi.exception.ResourceNotFoundException;
+import msg.onlineshopapi.exception.OrderNotProcessableException;
 import msg.onlineshopapi.model.*;
 import msg.onlineshopapi.repository.OrderRepository;
 import msg.onlineshopapi.repository.StockRepository;
@@ -36,6 +37,7 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(Order order, String email) {
+        validateDeliveryAddress(order);
         resolveUser(order, email);
         Set<OrderDetail> orderDetails = mergeDuplicateProducts(order.getOrderDetails());
         Map<UUID, Integer> quantityByProduct = orderDetails.stream()
@@ -49,6 +51,20 @@ public class OrderService {
         order.getOrderDetails().addAll(buildOrderDetails(order, stocks, quantityByProduct));
         deductStock(stocks, quantityByProduct);
         return orderRepository.save(order);
+    }
+
+    private void validateDeliveryAddress(Order order) {
+        if (order.getAddress() == null
+                || isBlank(order.getAddress().getCountry())
+                || isBlank(order.getAddress().getCity())
+                || isBlank(order.getAddress().getCounty())
+                || isBlank(order.getAddress().getStreetAddress())) {
+            throw new OrderNotProcessableException("Delivery address is required");
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private Set<OrderDetail> mergeDuplicateProducts(Set<OrderDetail> orderDetails) {

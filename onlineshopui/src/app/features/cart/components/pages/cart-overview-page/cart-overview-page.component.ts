@@ -16,6 +16,7 @@ import { CartItemRowComponent } from '../../views/cart-item-row/cart-item-row.co
 import { CartSummaryComponent } from '../../views/cart-summary/cart-summary.component';
 import { AppNavRoutes } from '../../../../../core/config/constants/navigation.constants';
 import { NotificationsService } from '../../../../../core/services/notifications.service';
+import { AddressDto } from '../../../../../core/types/dtos/order.dto';
 import {
     buildProductsById,
     calculateCartSubtotal,
@@ -53,6 +54,16 @@ export class CartOverviewPageComponent implements OnInit {
     );
 
     readonly itemCount = this.cartService.totalItems;
+    readonly deliveryAddress = signal<AddressDto>({
+        country: '',
+        city: '',
+        county: '',
+        streetAddress: ''
+    });
+    readonly addressSubmitted = signal(false);
+    readonly addressInvalid = computed(() =>
+        Object.values(this.deliveryAddress()).some(value => !value.trim())
+    );
 
     ngOnInit(): void {
         this.productService.loadAll().pipe(take(1)).subscribe();
@@ -71,9 +82,14 @@ export class CartOverviewPageComponent implements OnInit {
     }
 
     onCheckout(): void {
-        if (this.cartItems().length === 0) return;
+        if (this.cartItems().length === 0 || this.isSubmitting()) return;
 
-        const payload = toCreateOrderDto(this.cartItems());
+        if (this.addressInvalid()) {
+            this.addressSubmitted.set(true);
+            return;
+        }
+
+        const payload = toCreateOrderDto(this.cartItems(), this.deliveryAddress());
         if (!payload) return;
 
         this.isSubmitting.set(true);
@@ -103,6 +119,11 @@ export class CartOverviewPageComponent implements OnInit {
                     this.isSubmitting.set(false);
                 }
             });
+    }
+
+    onAddressChange(field: keyof AddressDto, event: Event): void {
+        const value = (event.target as HTMLInputElement).value;
+        this.deliveryAddress.update(address => ({ ...address, [field]: value }));
     }
 
     retry(): void {
