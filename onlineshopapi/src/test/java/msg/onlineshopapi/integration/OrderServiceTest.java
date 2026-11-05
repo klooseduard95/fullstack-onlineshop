@@ -1,6 +1,7 @@
 package msg.onlineshopapi.integration;
 
 import msg.onlineshopapi.exception.OrderNotProcessableException;
+import msg.onlineshopapi.model.Address;
 import msg.onlineshopapi.model.Location;
 import msg.onlineshopapi.model.Order;
 import msg.onlineshopapi.model.OrderDetail;
@@ -150,6 +151,40 @@ class OrderServiceTest {
 
         Stock updatedStock = stockRepository.findById(stockId).orElseThrow();
         assertThat(updatedStock.getQuantity()).isEqualTo(7);
+    }
+
+    @Test
+    void createOrder_persistsAddress_andRoundTripsCorrectly() {
+        stockRepository.save(Stock.builder()
+                .id(stockId)
+                .product(laptop)
+                .location(location)
+                .quantity(10)
+                .build());
+
+        OrderDetail detail = OrderDetail.builder()
+                .product(laptop)
+                .quantity(2)
+                .build();
+        Address address = Address.builder()
+                .country("Romania")
+                .city("Cluj-Napoca")
+                .county("Cluj")
+                .streetAddress("Strada Mihai Eminescu 5")
+                .build();
+        Order order = Order.builder()
+                .orderDetails(new HashSet<>(Set.of(detail)))
+                .address(address)
+                .build();
+
+        Order created = orderService.createOrder(order, user.getEmail());
+
+        Order persisted = orderRepository.findById(created.getId()).orElseThrow();
+        assertThat(persisted.getAddress()).isNotNull();
+        assertThat(persisted.getAddress().getCountry()).isEqualTo("Romania");
+        assertThat(persisted.getAddress().getCity()).isEqualTo("Cluj-Napoca");
+        assertThat(persisted.getAddress().getCounty()).isEqualTo("Cluj");
+        assertThat(persisted.getAddress().getStreetAddress()).isEqualTo("Strada Mihai Eminescu 5");
     }
 
     @Test

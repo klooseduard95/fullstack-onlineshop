@@ -2,6 +2,7 @@ package msg.onlineshopapi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import msg.onlineshopapi.config.TestSecurityConfig;
+import msg.onlineshopapi.dto.AddressDto;
 import msg.onlineshopapi.dto.OrderItemRequestDto;
 import msg.onlineshopapi.dto.OrderRequestDto;
 import msg.onlineshopapi.dto.OrderResponseDto;
@@ -101,6 +102,7 @@ class OrderControllerTest {
         OrderRequestDto request = OrderRequestDto.builder()
                 .items(List.of(OrderItemRequestDto.builder()
                         .productId(productId).quantity(2).build()))
+                .address(validAddress())
                 .build();
         Order entity = Order.builder().build();
         Order saved = Order.builder().id(orderId).build();
@@ -124,6 +126,7 @@ class OrderControllerTest {
         OrderRequestDto request = OrderRequestDto.builder()
                 .items(List.of(OrderItemRequestDto.builder()
                         .productId(productId).quantity(999).build()))
+                .address(validAddress())
                 .build();
         Order entity = Order.builder().build();
 
@@ -137,6 +140,56 @@ class OrderControllerTest {
                         .principal(() -> "customer@test.com"))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.error").value("Insufficient stock"));
+    }
+
+    @Test
+    @WithMockUser(username = "customer@test.com", roles = "CUSTOMER")
+    void create_returns400_whenAddressMissing() throws Exception {
+        OrderRequestDto request = OrderRequestDto.builder()
+                .items(List.of(OrderItemRequestDto.builder()
+                        .productId(productId).quantity(2).build()))
+                .build();
+
+        mockMvc.perform(post("/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(() -> "customer@test.com"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.address").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "customer@test.com", roles = "CUSTOMER")
+    void create_returns400_whenAddressFieldsBlank() throws Exception {
+        OrderRequestDto request = OrderRequestDto.builder()
+                .items(List.of(OrderItemRequestDto.builder()
+                        .productId(productId).quantity(2).build()))
+                .address(AddressDto.builder()
+                        .country("")
+                        .city("")
+                        .county("")
+                        .streetAddress("")
+                        .build())
+                .build();
+
+        mockMvc.perform(post("/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(() -> "customer@test.com"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.['address.country']").exists())
+                .andExpect(jsonPath("$.fieldErrors.['address.city']").exists())
+                .andExpect(jsonPath("$.fieldErrors.['address.county']").exists())
+                .andExpect(jsonPath("$.fieldErrors.['address.streetAddress']").exists());
+    }
+
+    private AddressDto validAddress() {
+        return AddressDto.builder()
+                .country("Romania")
+                .city("Cluj-Napoca")
+                .county("Cluj")
+                .streetAddress("Strada Mihai Eminescu 5")
+                .build();
     }
 
     private OrderResponseDto orderResponse(UUID id) {

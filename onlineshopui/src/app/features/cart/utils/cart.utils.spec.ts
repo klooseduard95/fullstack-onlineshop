@@ -1,7 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { calculateCartSubtotal } from './cart.utils';
+import { calculateCartSubtotal, toCreateOrderDto } from './cart.utils';
 import { ProductDto } from '../../../core/types/dtos/product.dto';
+import { AddressDto } from '../../../core/types/dtos/location.dto';
 import { CartItem } from '../types/cart-item.type';
+
+function buildAddress(overrides: Partial<AddressDto> = {}): AddressDto {
+    return {
+        country: 'Romania',
+        city: 'Cluj-Napoca',
+        county: 'Cluj',
+        streetAddress: 'Strada Mihai Eminescu 5',
+        ...overrides
+    };
+}
 
 function buildProduct(overrides: Partial<ProductDto> = {}): ProductDto {
     return {
@@ -86,5 +97,39 @@ describe('calculateCartSubtotal', () => {
 
         // Assert
         expect(result).toBe('0.30');
+    });
+});
+
+describe('toCreateOrderDto', () => {
+    it('toCreateOrderDto_returnsPayloadWithAddress_whenItemsAreNotEmpty', () => {
+        // Arrange
+        const items: CartItem[] = [
+            { productId: 'p1', quantity: 2 },
+            { productId: 'p2', quantity: 1 }
+        ];
+        const address = buildAddress();
+
+        // Act
+        const result = toCreateOrderDto(items, address);
+
+        // Assert
+        expect(result).toEqual({
+            items: [
+                { productId: 'p1', quantity: 2 },
+                { productId: 'p2', quantity: 1 }
+            ],
+            address
+        });
+    });
+
+    it('toCreateOrderDto_returnsNull_whenItemsIsEmpty', () => {
+        // Arrange
+        const address = buildAddress();
+
+        // Act
+        const result = toCreateOrderDto([], address);
+
+        // Assert
+        expect(result).toBeNull();
     });
 });

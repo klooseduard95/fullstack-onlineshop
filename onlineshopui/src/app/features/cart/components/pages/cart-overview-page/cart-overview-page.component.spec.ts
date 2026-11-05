@@ -1,8 +1,10 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { CartOverviewPageComponent } from './cart-overview-page.component';
+import { CartAddressFormComponent } from '../../views/cart-address-form/cart-address-form.component';
 import { CartService } from '../../../services/cart.service';
 import { ProductService } from '../../../../products/services/product.service';
 import { OrdersService } from '../../../../orders/services/orders.service';
@@ -11,6 +13,8 @@ import { MOCK_CART_ITEMS } from '../../../../../core/mocks/data/cart.mock';
 import { MOCK_PRODUCTS } from '../../../../../core/mocks/data/products.mock';
 import { MOCK_ORDERS } from '../../../../../core/mocks/data/orders.mock';
 import { signal } from '@angular/core';
+import { ValidationMessages } from '../../../../../core/types/providers/validation-messages';
+import { DefaultValidationMessages } from '../../../../../core/config/constants/validation.constants';
 
 describe('CartOverviewPageComponent', () => {
     let component: CartOverviewPageComponent;
@@ -78,7 +82,8 @@ describe('CartOverviewPageComponent', () => {
                 { provide: ProductService, useValue: productServiceMock },
                 { provide: OrdersService, useValue: ordersServiceMock },
                 { provide: Router, useValue: routerMock },
-                { provide: NotificationsService, useValue: notificationsServiceMock }
+                { provide: NotificationsService, useValue: notificationsServiceMock },
+                { provide: ValidationMessages, useValue: DefaultValidationMessages }
             ]
         });
 
@@ -89,6 +94,19 @@ describe('CartOverviewPageComponent', () => {
     afterEach(() => {
         consoleErrorSpy.mockRestore();
     });
+
+    function fillAddressForm(): void {
+        const addressFormDebugEl = fixture.debugElement.query(By.directive(CartAddressFormComponent));
+        const addressFormComponent =
+            addressFormDebugEl.componentInstance as CartAddressFormComponent;
+        addressFormComponent.form.setValue({
+            country: 'Romania',
+            city: 'Cluj-Napoca',
+            county: 'Cluj',
+            streetAddress: 'Strada Mihai Eminescu 5'
+        });
+        fixture.detectChanges();
+    }
 
     describe('Initialization', () => {
         it('should create', () => {
@@ -180,6 +198,7 @@ describe('CartOverviewPageComponent', () => {
         it('should create order and navigate to orders on success', () => {
             // Prepare
             fixture.detectChanges();
+            fillAddressForm();
 
             // Action
             component.onCheckout();
@@ -194,10 +213,43 @@ describe('CartOverviewPageComponent', () => {
             expect(routerMock.navigate).toHaveBeenCalled();
         });
 
+        it('should include the submitted address in the order payload', () => {
+            // Prepare
+            fixture.detectChanges();
+            fillAddressForm();
+
+            // Action
+            component.onCheckout();
+
+            // Verify
+            expect(ordersServiceMock.create).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    address: {
+                        country: 'Romania',
+                        city: 'Cluj-Napoca',
+                        county: 'Cluj',
+                        streetAddress: 'Strada Mihai Eminescu 5'
+                    }
+                })
+            );
+        });
+
+        it('should not submit when address form is invalid', () => {
+            // Prepare
+            fixture.detectChanges();
+
+            // Action
+            component.onCheckout();
+
+            // Verify
+            expect(ordersServiceMock.create).not.toHaveBeenCalled();
+        });
+
         it('should handle checkout failure', () => {
             // Prepare
             ordersServiceMock.create.mockReturnValue(throwError(() => new Error('Failed')));
             fixture.detectChanges();
+            fillAddressForm();
 
             // Action
             component.onCheckout();
@@ -208,6 +260,28 @@ describe('CartOverviewPageComponent', () => {
                 message: 'Please try again in a moment.'
             });
             expect(routerMock.navigate).not.toHaveBeenCalled();
+        });
+
+        it('should preserve cart items and address form value when checkout fails', () => {
+            // Prepare
+            ordersServiceMock.create.mockReturnValue(throwError(() => new Error('Failed')));
+            fixture.detectChanges();
+            fillAddressForm();
+
+            // Action
+            component.onCheckout();
+
+            // Verify
+            expect(cartServiceMock.clear).not.toHaveBeenCalled();
+            const addressFormDebugEl = fixture.debugElement.query(By.directive(CartAddressFormComponent));
+            const addressFormComponent =
+                addressFormDebugEl.componentInstance as CartAddressFormComponent;
+            expect(addressFormComponent.form.value).toEqual({
+                country: 'Romania',
+                city: 'Cluj-Napoca',
+                county: 'Cluj',
+                streetAddress: 'Strada Mihai Eminescu 5'
+            });
         });
     });
 

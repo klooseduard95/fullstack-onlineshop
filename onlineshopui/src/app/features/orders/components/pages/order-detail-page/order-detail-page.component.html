@@ -41,13 +41,19 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <div class="text-sm text-text-muted">Ship To</div>
-                                <div class="text-text font-medium">
-                                    {{ order()!.address.streetAddress }}
-                                </div>
-                                <div class="text-text">
-                                    {{ order()!.address.city }}, {{ order()!.address.county }}
-                                </div>
-                                <div class="text-text">{{ order()!.address.country }}</div>
+                                @if (order()!.address; as address) {
+                                    <div class="text-text font-medium">
+                                        {{ address.streetAddress }}
+                                    </div>
+                                    <div class="text-text">
+                                        {{ address.city }}, {{ address.county }}
+                                    </div>
+                                    <div class="text-text">{{ address.country }}</div>
+                                } @else {
+                                    <div class="text-text-muted italic">
+                                        No delivery address on file
+                                    </div>
+                                }
                             </div>
                             <div class="text-right">
                                 <div class="text-sm text-text-muted">Total</div>
