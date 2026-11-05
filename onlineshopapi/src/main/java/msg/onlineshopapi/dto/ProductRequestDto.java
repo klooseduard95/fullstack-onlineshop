@@ -2,6 +2,7 @@ package msg.onlineshopapi.dto;
 
 import lombok.*;
 
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -18,5 +19,6 @@ public class ProductRequestDto {
     private Double weight;
     private String imageUrl;
     private UUID categoryId;
+    @NotNull(message = "supplierId is required")
     private UUID supplierId;
 }

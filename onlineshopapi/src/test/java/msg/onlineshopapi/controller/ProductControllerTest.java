@@ -30,6 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -152,6 +153,20 @@ class ProductControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    void create_returns400_whenSupplierIdMissing() throws Exception {
+        ProductRequestDto request = ProductRequestDto.builder()
+                .name("Laptop").price(BigDecimal.valueOf(999.99)).categoryId(categoryId).build();
+
+        mockMvc.perform(post("/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(productMapper, productService);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     void update_returnsProduct_whenAdmin() throws Exception {
         ProductRequestDto request = ProductRequestDto.builder()
                 .name("Updated Laptop").price(BigDecimal.valueOf(1099.99)).categoryId(categoryId).supplierId(supplierId).build();
@@ -186,6 +201,20 @@ class ProductControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Product not found with id: " + laptopId));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void update_returns400_whenSupplierIdMissing() throws Exception {
+        ProductRequestDto request = ProductRequestDto.builder()
+                .name("Laptop").price(BigDecimal.valueOf(999.99)).categoryId(categoryId).build();
+
+        mockMvc.perform(put("/products/{id}", laptopId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(productMapper, productService);
     }
 
     @Test
