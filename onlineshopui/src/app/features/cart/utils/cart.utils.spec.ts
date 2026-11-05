@@ -11,6 +11,13 @@ function buildProduct(overrides: Partial<ProductDto> = {}): ProductDto {
         price: 10,
         weight: 1,
         category: { id: 'cat-1', name: 'Category', description: 'Category description' },
+        supplier: {
+            id: 'sup-1',
+            name: 'Supplier',
+            contactEmail: 'supplier@example.com',
+            phone: '+1-555-0000',
+            address: '1 Supplier Way'
+        },
         imageUrl: 'image.png',
         ...overrides
     };
