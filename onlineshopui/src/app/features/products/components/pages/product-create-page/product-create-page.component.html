@@ -12,11 +12,12 @@
         }
 
         <!-- Form -->
-        @if (!loading() || categories().length > 0) {
+        @if (!loading() || (categories().length > 0 && suppliers().length > 0)) {
             <app-card>
                 <app-product-form
                     [form]="form"
                     [categories]="categories()"
+                    [suppliers]="suppliers()"
                     [isSubmitting]="isSubmitting()"
                     [submitLabel]="'Create Product'"
                     (formSubmit)="onSubmit()"
