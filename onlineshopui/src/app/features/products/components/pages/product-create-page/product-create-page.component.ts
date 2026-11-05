@@ -27,6 +27,8 @@ export class ProductCreatePageComponent implements OnInit {
     readonly categories = this.productService.categories;
     readonly suppliers = this.supplierService.suppliers;
     readonly loading = this.productService.loading;
+    readonly supplierLoading = this.supplierService.loading;
+    readonly supplierError = this.supplierService.error;
     readonly isSubmitting = signal(false);
 
     constructor() {
@@ -92,5 +94,10 @@ export class ProductCreatePageComponent implements OnInit {
         this.router.navigate([
             `/${AppNavRoutes.Products.root}/${AppNavRoutes.Products.features.overview}`
         ]);
+    }
+
+    retry(): void {
+        this.productService.loadCategories().pipe(take(1)).subscribe();
+        this.supplierService.loadAll().pipe(take(1)).subscribe();
     }
 }

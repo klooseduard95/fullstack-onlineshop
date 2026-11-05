@@ -24,6 +24,8 @@ describe('ProductCreatePageComponent', () => {
     };
     let supplierServiceMock: {
         suppliers: ReturnType<typeof signal>;
+        loading: ReturnType<typeof signal>;
+        error: ReturnType<typeof signal>;
         loadAll: ReturnType<typeof vi.fn>;
     };
     let routerMock: {
@@ -47,6 +49,8 @@ describe('ProductCreatePageComponent', () => {
 
         supplierServiceMock = {
             suppliers: signal([...MOCK_SUPPLIERS]),
+            loading: signal(false),
+            error: signal(null),
             loadAll: vi.fn().mockReturnValue(of(MOCK_SUPPLIERS))
         };
 
@@ -98,6 +102,13 @@ describe('ProductCreatePageComponent', () => {
             component.ngOnInit();
 
             // Verify
+            expect(productServiceMock.loadCategories).toHaveBeenCalled();
+            expect(supplierServiceMock.loadAll).toHaveBeenCalled();
+        });
+
+        it('should retry loading categories and suppliers', () => {
+            component.retry();
+
             expect(productServiceMock.loadCategories).toHaveBeenCalled();
             expect(supplierServiceMock.loadAll).toHaveBeenCalled();
         });
@@ -249,4 +260,3 @@ describe('ProductCreatePageComponent', () => {
         });
     });
 });
-

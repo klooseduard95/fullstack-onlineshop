@@ -30,6 +30,8 @@ export class ProductUpdatePageComponent implements OnInit {
     readonly suppliers = this.supplierService.suppliers;
     readonly loading = this.productService.loading;
     readonly error = this.productService.error;
+    readonly supplierLoading = this.supplierService.loading;
+    readonly supplierError = this.supplierService.error;
     readonly isSubmitting = signal(false);
     private readonly productId = signal<string | null>(null);
 

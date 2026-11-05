@@ -27,6 +27,8 @@ describe('ProductUpdatePageComponent', () => {
     };
     let supplierServiceMock: {
         suppliers: ReturnType<typeof signal>;
+        loading: ReturnType<typeof signal>;
+        error: ReturnType<typeof signal>;
         loadAll: ReturnType<typeof vi.fn>;
     };
     let routerMock: {
@@ -58,6 +60,8 @@ describe('ProductUpdatePageComponent', () => {
 
         supplierServiceMock = {
             suppliers: signal([...MOCK_SUPPLIERS]),
+            loading: signal(false),
+            error: signal(null),
             loadAll: vi.fn().mockReturnValue(of(MOCK_SUPPLIERS))
         };
 
