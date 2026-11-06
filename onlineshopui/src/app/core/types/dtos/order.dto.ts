@@ -5,7 +5,8 @@ export type OrderDto = {
     id: string;
     userId: string;
     createdAt: string;
-    address: AddressDto;
+    // Historical orders may have been created before delivery addresses were required.
+    address: AddressDto | null;
     details?: OrderDetailsDto[];
 };
 
@@ -23,4 +24,5 @@ export type CreateOrderItemDto = {
 
 export type CreateOrderDto = {
     items: CreateOrderItemDto[];
+    address: AddressDto;
 };

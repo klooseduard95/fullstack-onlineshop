@@ -154,4 +154,31 @@ describe('OrderDetailPageComponent', () => {
             expect(typeof totalAmount).toBe('string');
         });
     });
+
+    describe('address rendering', () => {
+        it('should render delivery address details when address is present', () => {
+            // Prepare
+            ordersServiceMock.selectedOrder.set(MOCK_ORDERS[0]);
+
+            // Action
+            fixture.detectChanges();
+
+            // Verify
+            const text = fixture.nativeElement.textContent as string;
+            expect(text).not.toContain('No delivery address on file');
+            expect(text).toContain(MOCK_ORDERS[0].address!.streetAddress);
+        });
+
+        it('should render a fallback message instead of throwing when address is null', () => {
+            // Prepare
+            ordersServiceMock.selectedOrder.set({ ...MOCK_ORDERS[0], address: null });
+
+            // Action
+            expect(() => fixture.detectChanges()).not.toThrow();
+
+            // Verify
+            const text = fixture.nativeElement.textContent as string;
+            expect(text).toContain('No delivery address on file');
+        });
+    });
 });

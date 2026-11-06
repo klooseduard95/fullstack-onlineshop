@@ -4,7 +4,8 @@ import {
     OnInit,
     computed,
     inject,
-    signal
+    signal,
+    viewChild
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { take } from 'rxjs';
@@ -14,6 +15,7 @@ import { OrdersService } from '../../../../orders/services/orders.service';
 import { SpinnerComponent } from '../../../../../clib/components/spinner/spinner.component';
 import { CartItemRowComponent } from '../../views/cart-item-row/cart-item-row.component';
 import { CartSummaryComponent } from '../../views/cart-summary/cart-summary.component';
+import { CartAddressFormComponent } from '../../views/cart-address-form/cart-address-form.component';
 import { AppNavRoutes } from '../../../../../core/config/constants/navigation.constants';
 import { NotificationsService } from '../../../../../core/services/notifications.service';
 import {
@@ -21,10 +23,17 @@ import {
     calculateCartSubtotal,
     toCreateOrderDto
 } from '../../../utils/cart.utils';
+import { toAddressDto } from '../../../utils/address-form.utils';
 
 @Component({
     selector: 'app-cart-overview-page',
-    imports: [SpinnerComponent, CartItemRowComponent, CartSummaryComponent, RouterLink],
+    imports: [
+        SpinnerComponent,
+        CartItemRowComponent,
+        CartSummaryComponent,
+        CartAddressFormComponent,
+        RouterLink
+    ],
     templateUrl: './cart-overview-page.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -35,11 +44,14 @@ export class CartOverviewPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly notificationsService = inject(NotificationsService);
 
+    private readonly addressForm = viewChild(CartAddressFormComponent);
+
     readonly cartItems = this.cartService.items;
     readonly products = this.productService.products;
     readonly loading = this.productService.loading;
     readonly error = this.productService.error;
     readonly isSubmitting = signal(false);
+    readonly isAddressValid = signal(false);
     readonly productsLink = [
         '/',
         AppNavRoutes.Products.root,
@@ -70,10 +82,20 @@ export class CartOverviewPageComponent implements OnInit {
         this.cartService.clear();
     }
 
+    onAddressValidityChange(valid: boolean): void {
+        this.isAddressValid.set(valid);
+    }
+
     onCheckout(): void {
         if (this.cartItems().length === 0) return;
 
-        const payload = toCreateOrderDto(this.cartItems());
+        const addressForm = this.addressForm();
+        if (!addressForm || addressForm.form.invalid) {
+            addressForm?.form.markAllAsTouched();
+            return;
+        }
+
+        const payload = toCreateOrderDto(this.cartItems(), toAddressDto(addressForm.form));
         if (!payload) return;
 
         this.isSubmitting.set(true);
