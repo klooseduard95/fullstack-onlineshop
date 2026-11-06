@@ -1,11 +1,13 @@
 import { AddressDto, LocationDto } from './location.dto';
 import { ProductDto } from './product.dto';
 
+export type { AddressDto } from './location.dto';
+
 export type OrderDto = {
     id: string;
     userId: string;
     createdAt: string;
-    address: AddressDto;
+    address: AddressDto | null;
     details?: OrderDetailsDto[];
 };
 
@@ -23,4 +25,5 @@ export type CreateOrderItemDto = {
 
 export type CreateOrderDto = {
     items: CreateOrderItemDto[];
+    address: AddressDto;
 };

@@ -2,6 +2,7 @@ package msg.onlineshopapi.integration;
 
 import msg.onlineshopapi.exception.OrderNotProcessableException;
 import msg.onlineshopapi.model.Location;
+import msg.onlineshopapi.model.Address;
 import msg.onlineshopapi.model.Order;
 import msg.onlineshopapi.model.OrderDetail;
 import msg.onlineshopapi.model.Product;
@@ -149,6 +150,7 @@ class OrderServiceTest {
                 .quantity(3)
                 .build();
         Order order = Order.builder()
+                .address(validAddress())
                 .orderDetails(new HashSet<>(Set.of(detail)))
                 .build();
 
@@ -157,6 +159,8 @@ class OrderServiceTest {
         assertThat(result.getId()).isNotNull();
         assertThat(result.getUser().getEmail()).isEqualTo(user.getEmail());
         assertThat(result.getOrderDetails()).hasSize(1);
+        Order persisted = orderRepository.findById(result.getId()).orElseThrow();
+        assertThat(persisted.getAddress()).usingRecursiveComparison().isEqualTo(validAddress());
 
         Stock updatedStock = stockRepository.findById(stockId).orElseThrow();
         assertThat(updatedStock.getQuantity()).isEqualTo(7);
@@ -176,6 +180,7 @@ class OrderServiceTest {
                 .quantity(5)
                 .build();
         Order order = Order.builder()
+                .address(validAddress())
                 .orderDetails(new HashSet<>(Set.of(detail)))
                 .build();
 
@@ -221,6 +226,7 @@ class OrderServiceTest {
                 .quantity(3)
                 .build();
         Order order = Order.builder()
+                .address(validAddress())
                 .orderDetails(new HashSet<>(Set.of(laptopDetail, mouseDetail)))
                 .build();
 
@@ -273,6 +279,7 @@ class OrderServiceTest {
                 .quantity(5)
                 .build();
         Order order = Order.builder()
+                .address(validAddress())
                 .orderDetails(new HashSet<>(Set.of(laptopDetail, keyboardDetail)))
                 .build();
 
@@ -283,5 +290,36 @@ class OrderServiceTest {
         Stock unchangedKeyboardStock = stockRepository.findById(keyboardStockId).orElseThrow();
         assertThat(unchangedLaptopStock.getQuantity()).isEqualTo(10);
         assertThat(unchangedKeyboardStock.getQuantity()).isEqualTo(1);
+    }
+
+    @Test
+    void createOrder_throwsWhenDeliveryAddressIsMissing() {
+        stockRepository.save(Stock.builder()
+                .id(stockId)
+                .product(laptop)
+                .location(location)
+                .quantity(10)
+                .build());
+
+        OrderDetail detail = OrderDetail.builder()
+                .product(laptop)
+                .quantity(1)
+                .build();
+        Order order = Order.builder()
+                .orderDetails(new HashSet<>(Set.of(detail)))
+                .build();
+
+        assertThatThrownBy(() -> orderService.createOrder(order, user.getEmail()))
+                .isInstanceOf(OrderNotProcessableException.class)
+                .hasMessage("Delivery address is required");
+    }
+
+    private Address validAddress() {
+        return Address.builder()
+                .country("Romania")
+                .city("Cluj-Napoca")
+                .county("Cluj")
+                .streetAddress("Strada Memorandumului 1")
+                .build();
     }
 }

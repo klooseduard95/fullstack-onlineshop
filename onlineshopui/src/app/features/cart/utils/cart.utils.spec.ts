@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateCartSubtotal } from './cart.utils';
+import { calculateCartSubtotal, toCreateOrderDto } from './cart.utils';
 import { ProductDto } from '../../../core/types/dtos/product.dto';
 import { CartItem } from '../types/cart-item.type';
 
@@ -41,6 +41,33 @@ describe('calculateCartSubtotal', () => {
 
         // Assert
         expect(result).toBe('36.50');
+    });
+
+    describe('toCreateOrderDto', () => {
+        it('toCreateOrderDto_returnsItemsAndAddress_whenCartHasItems', () => {
+            const address = {
+                country: 'Romania',
+                city: 'Cluj-Napoca',
+                county: 'Cluj',
+                streetAddress: 'Strada Memorandumului 1'
+            };
+            const items: CartItem[] = [{ productId: 'p1', quantity: 2 }];
+
+            const result = toCreateOrderDto(items, address);
+
+            expect(result).toEqual({ items, address });
+        });
+
+        it('toCreateOrderDto_returnsNull_whenCartIsEmpty', () => {
+            const address = {
+                country: 'Romania',
+                city: 'Cluj-Napoca',
+                county: 'Cluj',
+                streetAddress: 'Strada Memorandumului 1'
+            };
+
+            expect(toCreateOrderDto([], address)).toBeNull();
+        });
     });
 
     it('calculateCartSubtotal_returnsZero_whenItemsIsEmpty', () => {

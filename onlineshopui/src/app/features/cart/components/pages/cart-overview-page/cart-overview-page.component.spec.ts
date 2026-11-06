@@ -10,7 +10,7 @@ import { NotificationsService } from '../../../../../core/services/notifications
 import { MOCK_CART_ITEMS } from '../../../../../core/mocks/data/cart.mock';
 import { MOCK_PRODUCTS } from '../../../../../core/mocks/data/products.mock';
 import { MOCK_ORDERS } from '../../../../../core/mocks/data/orders.mock';
-import { signal } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, signal } from '@angular/core';
 
 describe('CartOverviewPageComponent', () => {
     let component: CartOverviewPageComponent;
@@ -42,7 +42,7 @@ describe('CartOverviewPageComponent', () => {
 
     beforeEach(() => {
         // Mock console.error to suppress expected error logs during error handling tests
-        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         cartServiceMock = {
             items: signal([...MOCK_CART_ITEMS]),
             totalItems: signal(3),
@@ -73,6 +73,7 @@ describe('CartOverviewPageComponent', () => {
 
         TestBed.configureTestingModule({
             imports: [CartOverviewPageComponent],
+            schemas: [CUSTOM_ELEMENTS_SCHEMA],
             providers: [
                 { provide: CartService, useValue: cartServiceMock },
                 { provide: ProductService, useValue: productServiceMock },
@@ -82,6 +83,9 @@ describe('CartOverviewPageComponent', () => {
             ]
         });
 
+        TestBed.overrideComponent(CartOverviewPageComponent, {
+            set: { imports: [], schemas: [CUSTOM_ELEMENTS_SCHEMA] }
+        });
         fixture = TestBed.createComponent(CartOverviewPageComponent);
         component = fixture.componentInstance;
     });
@@ -180,12 +184,26 @@ describe('CartOverviewPageComponent', () => {
         it('should create order and navigate to orders on success', () => {
             // Prepare
             fixture.detectChanges();
+            const address = {
+                country: 'Romania',
+                city: 'Cluj-Napoca',
+                county: 'Cluj',
+                streetAddress: 'Strada Memorandumului 1'
+            };
+            component.deliveryAddress.set(address);
 
             // Action
             component.onCheckout();
 
             // Verify
             expect(ordersServiceMock.create).toHaveBeenCalled();
+            expect(ordersServiceMock.create.mock.calls[0][0]).toEqual({
+                items: MOCK_CART_ITEMS.map(item => ({
+                    productId: item.productId,
+                    quantity: item.quantity
+                })),
+                address
+            });
             expect(cartServiceMock.clear).toHaveBeenCalled();
             expect(notificationsServiceMock.notifySuccess).toHaveBeenCalledWith({
                 title: 'Order placed',
@@ -198,6 +216,13 @@ describe('CartOverviewPageComponent', () => {
             // Prepare
             ordersServiceMock.create.mockReturnValue(throwError(() => new Error('Failed')));
             fixture.detectChanges();
+            const address = {
+                country: 'Romania',
+                city: 'Cluj-Napoca',
+                county: 'Cluj',
+                streetAddress: 'Strada Memorandumului 1'
+            };
+            component.deliveryAddress.set(address);
 
             // Action
             component.onCheckout();
@@ -207,7 +232,21 @@ describe('CartOverviewPageComponent', () => {
                 title: 'Order failed',
                 message: 'Please try again in a moment.'
             });
+            expect(cartServiceMock.clear).not.toHaveBeenCalled();
+            expect(component.deliveryAddress()).toEqual(address);
             expect(routerMock.navigate).not.toHaveBeenCalled();
+        });
+
+        it('should not create order when address is incomplete', () => {
+            // Prepare
+            fixture.detectChanges();
+
+            // Action
+            component.onCheckout();
+
+            // Verify
+            expect(ordersServiceMock.create).not.toHaveBeenCalled();
+            expect(component.addressSubmitted()).toBe(true);
         });
     });
 
